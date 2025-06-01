@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Receipt - Online Bakery</title>
+  <style>
+    /* Reset some styles */
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #fafafa;
+      margin: 20px auto;
+      max-width: 600px;
+      color: #333;
+      padding: 20px;
+    }
+
+
+    h1, h2, h3 {
+      margin-bottom: 0.3em;
+    }
+
+
+    h1 {
+      text-align: center;
+      color: #d35400; /* bakery warm orange */
+      margin-bottom: 1em;
+    }
+
+
+    .receipt-container {
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+      border: 1px solid #ddd;
+    }
+
+
+    .header, .footer {
+      text-align: center;
+      margin-bottom: 1.5em;
+      color: #555;
+    }
+
+
+    .header p, .footer p {
+      margin: 0.2em 0;
+      font-size: 0.9em;
+    }
+
+
+    .customer-info, .order-details {
+      margin-bottom: 1.5em;
+    }
+
+
+    .customer-info h2, .order-details h2 {
+      border-bottom: 2px solid #d35400;
+      padding-bottom: 0.3em;
+      margin-bottom: 0.8em;
+      font-weight: 700;
+    }
+
+
+    .customer-info p {
+      margin: 0.3em 0;
+      font-size: 1em;
+    }
+
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5em;
+    }
+
+
+    th, td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      font-size: 1em;
+    }
+
+
+    th {
+      background-color: #f9f2ec;
+      color: #d35400;
+      font-weight: 600;
+    }
+
+
+    td.qty, td.price, td.subtotal {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+
+    tfoot tr td {
+      font-weight: 700;
+      font-size: 1.1em;
+      border-top: 2px solid #d35400;
+      background-color: #fef7f1;
+    }
+
+
+    /* Print button styling */
+    .print-btn {
+      display: block;
+      width: 100%;
+      background-color: #d35400;
+      color: white;
+      border: none;
+      padding: 12px 0;
+      font-size: 1.1em;
+      font-weight: 600;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+
+    .print-btn:hover {
+      background-color: #b24300;
+    }
+
+
+    @media print {
+      .print-btn {
+        display: none;
+      }
+      body {
+        margin: 0;
+        background: white;
+      }
+      .receipt-container {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt-container" role="main">
+    <h1>Online Bakery</h1>
+
+
+    <div class="header" aria-label="Shop details">
+      <p>123 Bakery St, Sweet City</p>
+      <p>Phone: +63 912 345 6789</p>
+      <p>Email: support@onlinebakery.com</p>
+      <p>Receipt generated on: <span id="receipt-date"></span></p>
+    </div>
+
+
+    <section class="customer-info" aria-label="Customer information">
+      <h2>Customer Info</h2>
+      <p><strong>Name:</strong> <span id="cust-name"></span></p>
+      <p><strong>Email:</strong> <span id="cust-email"></span></p>
+      <p><strong>Phone:</strong> <span id="cust-phone"></span></p>
+      <p><strong>Delivery Address:</strong> <span id="cust-address"></span></p>
+    </section>
+
+
+    <section class="order-details" aria-label="Order details">
+      <h2>Order Details</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th class="qty">Qty</th>
+            <th class="price">Unit Price</th>
+            <th class="subtotal">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody id="order-items"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align: right;">Total</td>
+            <td id="order-total"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+
+    <div class="footer">
+      <p>Thank you for supporting our bakery!</p>
+      <p>We look forward to serving you again.</p>
+    </div>
+
+
+    <button class="print-btn" onclick="window.print()">Print Receipt</button>
+  </div>
+
+
+  <script>
+    function formatPrice(value) {
+      return '₱' + value.toFixed(2);
+    }
+
+
+    // Load order data from localStorage
+    const orderDataJSON = localStorage.getItem('orderData');
+    if (!orderDataJSON) {
+      alert('No order data found.');
+      // Optionally redirect back to main shop page
+      // window.location.href = 'index.html';
+    } else {
+      const orderData = JSON.parse(orderDataJSON);
+
+
+      // Fill customer info
+      document.getElementById('cust-name').textContent = orderData.customer.name;
+      document.getElementById('cust-email').textContent = orderData.customer.email;
+      document.getElementById('cust-phone').textContent = orderData.customer.phone;
+      document.getElementById('cust-address').textContent = orderData.customer.address;
+
+
+      // Format and show receipt date
+      const dateObj = new Date(orderData.date);
+      document.getElementById('receipt-date').textContent = dateObj.toLocaleString();
+
+
+      // Fill order items
+      const tbody = document.getElementById('order-items');
+      let total = 0;
+      orderData.items.forEach(item => {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+
+
+        const tr = document.createElement('tr');
+
+
+        const tdName = document.createElement('td');
+        tdName.textContent = item.name;
+        tr.appendChild(tdName);
+
+
+        const tdQty = document.createElement('td');
+        tdQty.className = 'qty';
+        tdQty.textContent = item.quantity;
+        tr.appendChild(tdQty);
+
+
+        const tdPrice = document.createElement('td');
+        tdPrice.className = 'price';
+        tdPrice.textContent = formatPrice(item.price);
+        tr.appendChild(tdPrice);
+
+
+        const tdSubtotal = document.createElement('td');
+        tdSubtotal.className = 'subtotal';
+        tdSubtotal.textContent = formatPrice(subtotal);
+        tr.appendChild(tdSubtotal);
+
+
+        tbody.appendChild(tr);
+      });
+
+
+      // Show total
+      document.getElementById('order-total').textContent = formatPrice(total);
+    }
+  </script>
+</body>
+</html>
